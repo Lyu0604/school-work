@@ -1,0 +1,71 @@
+
+import os
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+dir=os.path.dirname(__file__) #取得当前文件路径
+f=os.path.join(dir,'雅安川农大-air-quality.csv') #获取文件数据路径
+data=pd.read_csv(f,index_col=0,parse_dates=True) #读取文件
+print(data)
+print(data.describe())
+
+data=data.resample('M').mean() #按年统计均值
+print(data)
+
+fig,ax = plt.subplots()
+plt.rcParams['font.sans-serif']=['simsun']
+plt.title('四川农业大学监测点-AQI')#设置标题
+#转换时间索引列为格式化的时间
+pydate_array=data.index.to_pydatetime()
+date_only_array=np.vectorize(lambda s: s.strftime('%y-%m'))(pydate_array)
+date_only_series=pd.Series(date_only_array)
+#绘制直方图，设置横坐标，宽度
+plt.bar(date_only_series,data['pm25'],width=0.9)
+plt.bar(date_only_series,data['pm10'],width=0.9)
+#plt.plot(date_only_series,data['pm2.5'])
+ax.set_xticklabels(labels=date_only_series,rotation=90)#标签旋转90度
+plt.xlabel('日期')
+plt.ylabel('PM2.5')
+plt.show()
+
+#案例代码引自：https://www.cxybb.com/article/qq_39241986/114958032
+#数据来源：http://aqicn.org/city/china/yaan/chuannongda/cn/
+
+import os
+import pandas as pd
+import plotly.express as px
+dir = os.path.dirname(__file__)  #取得当前文件路径
+f = os.path.join(dir, '雅安川农大-air-quality.csv')#获取数据文件路径
+data = pd.read_csv(f, index_col=0, parse_dates=True)#读取文件
+
+#拷贝并进行索引重置
+df = data[['pm25']].copy()
+df.reset_index(inplace=True)
+print(df)
+
+#将time字段改为时间格式
+df.date = pd.to_datetime(df.date)
+#新增年月字段，内容为 x年x月，如2021年3月，为字符串格式
+df['年月'] = df.date.apply(lambda x: x.strftime('%Y{y}%m{m}').format(y="年", m="月"))
+#新增日期字段，内容为 1-31
+df['日期'] = df['date'].dt.day
+#做透视处理，将长表转化为宽表
+data = pd.pivot(df, values='pm25', index='年月', columns='日期')
+#转化后部分月份不存在部分日期默认为nan值，需要转化为数字格式 float（无法转化为int）
+data = data.astype('float')
+#按照 索引年月倒序排序
+data.sort_index(ascending=False, inplace=True)
+data.head()
+
+#import plotly.graph_objs as go
+
+fig = px.imshow(data,
+                color_continuous_scale='Temps',
+                color_continuous_midpoint=75,
+                range_color=[0, 200],
+                title='四川农业大学空气质量PM25',
+                width=1200,
+                height=900,
+                )
+fig.update_layout(xaxis=dict(tickmode='linear'),)  #x轴全部显示
+fig.show()
