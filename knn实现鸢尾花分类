@@ -1,0 +1,27 @@
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+import numpy as np
+
+# 载入数据集
+iris_dataset = load_iris()
+
+# 数据划分
+X_train, X_test, y_train, y_test = train_test_split(iris_dataset['data'], iris_dataset['target'], random_state=0)
+
+# 设置邻居数
+knn = KNeighborsClassifier(n_neighbors=1)
+
+# 构建基于训练集的模型
+knn.fit(X_train, y_train)
+
+
+# 一条测试数据
+X_new = np.array([[8, 3.0, 1, 0.5]])
+
+# 对X_new预测结果
+prediction = knn.predict(X_new)
+print("预测值%d" % prediction)
+
+# 得出测试集X_test测试集的分数
+print("score:{:.2f}".format(knn.score(X_test,y_test)))
